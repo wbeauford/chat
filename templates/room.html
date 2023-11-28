@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="theme-color" content="#65a9dcff">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">  
+        <meta http-equiv="cache-control" content="max-age=0" /> 
+        <meta http-equiv="cache-control" content="no-cache" /> 
+        <meta http-equiv="expires" content="0" /> 
+        <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" /> 
+        <meta http-equiv="pragma" content="no-cache" />
+        <tile>IM Demo</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+        <body>
+	<div>
+		<h3>In Room: {{ .roomName }} </h3>
+                <div id="rtrn_message">
+                </div>
+        <hr>
+	
+        <label for="message_field">Message</label>
+	<p>Your chosen username: {{ .username }}</p>
+	<input type='hidden' id='userName' value={{ .username }} />
+	<input type="hidden" id="roomNumber" value={{ .roomNumber }} />
+        <input type="text" id="message_field" placeholder="enter message.."/><br>
+        <button type="button" id="send">Send</button>
+        </div>
+
+
+        <div id="container"></div>
+
+
+
+
+	 <script type="text/javascript">
+        $(function () {
+                var ws;
+                if(window.WebSocket == undefined) {
+                        $("#container").html("Can't support websockets");
+                        return;
+                } else {
+                        ws = initWS();
+                }
+
+
+                function initWS() {
+			var roomNumber = document.getElementById("roomNumber").value;
+                        var socket = new WebSocket("ws://"+location.host+"/ws"),
+                              container = $("#container");
+                              rtn = $("#rtrn_message");
+                        socket.onopen = function () {
+                                container.html("<p>Connection open</p>");
+                        }
+
+                        socket.onmessage = function(e) {
+                                var mess = JSON.parse(e.data);
+				var im = "";
+				if (mess.RoomId == roomNumber) {
+					im = "<p>"+ new Date() + " " + mess.User + ": " + mess.Message+" </p>";
+                                	rtn.append(im);
+				}
+                                
+                        }
+
+                        socket.onclose = function() {
+                                container.html("connection closed");
+                        }
+
+                        return socket;
+                
+
+                }
+
+
+                $("#send").click(function(e) {
+                        e.preventDefault();
+                        var message = document.getElementById("message_field").value;
+			var username = document.getElementById("userName").value;
+			var id = document.getElementById("roomNumber").value;
+                        ws.send(JSON.stringify({ Message: message, RoomId: parseInt(id), User: username }));
+                });
+        
+
+
+        });
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>
